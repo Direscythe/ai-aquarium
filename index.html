@@ -409,8 +409,8 @@ async function setScreensaver(enabled){
  document.getElementById('screensaverBtn').textContent=enabled?'Exit Screensaver':'🌊 Screensaver';
  if(enabled){stopDecorMode();decorRemoveMode=false;selected=null;attractor=null;document.querySelectorAll('.modal.open').forEach(el=>el.classList.remove('open'));}
  resize();
- if(enabled){try{if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch(e){}try{if(navigator.wakeLock?.request)screensaverWakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
- else{try{await screensaverWakeLock?.release()}catch(e){}screensaverWakeLock=null;try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}}
+ if(enabled){try{if(navigator.wakeLock?.request)screensaverWakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
+ else{try{await screensaverWakeLock?.release()}catch(e){}screensaverWakeLock=null;}
 }
 function tick(time){if(!last)last=time;let dt=Math.min((time-last)/1000,.05);last=time;frameCounter++;fpsTime+=dt;if(fpsTime>=1){fps=Math.round(frameCounter/fpsTime);document.getElementById('fps').textContent=fps+' FPS';fpsTime=0;frameCounter=0}simulate(dt);render();saveTimer+=dt;if(saveTimer>12){saveTimer=0;save()}requestAnimationFrame(tick)}
 function decorRadius(d){return Math.max(25,65*(d.scale||1)*H/500)}
@@ -434,7 +434,7 @@ restoreNaturalColorsForNonMutants();enforceTwelveFishLimit();let away=Math.min(8
  document.getElementById('screensaverBtn').addEventListener('click',()=>setScreensaver(!screensaverActive));
  document.getElementById('screensaverExit').addEventListener('click',()=>setScreensaver(false));
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&screensaverActive)setScreensaver(false)});
- document.addEventListener('fullscreenchange',()=>{if(screensaverActive&&!document.fullscreenElement){document.body.classList.remove('screensaver');screensaverActive=false;document.getElementById('screensaverBtn').textContent='🌊 Screensaver';screensaverWakeLock?.release().catch(()=>{});screensaverWakeLock=null;resize();}});
+ 
  refreshDecorEditor();resize();updateUI();requestAnimationFrame(tick)}
 function setupBottomDock(){
  const move=(id,target)=>{let el=document.getElementById(id);if(el)document.getElementById(target).appendChild(el)};
