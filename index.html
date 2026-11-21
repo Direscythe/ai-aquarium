@@ -468,7 +468,7 @@ restoreNaturalColorsForNonMutants();for(const t of Object.values(state.tanks))fo
 function setupBottomDock(){
  const move=(id,target)=>{let el=document.getElementById(id);if(el)document.getElementById(target).appendChild(el)};
  ['buyTankBtn','renameTankBtn','upgradeBtn'].forEach(id=>move(id,'dock-tank-tools'));
- ['collectionBtn','quickMoveBtn','addBtn'].forEach(id=>move(id,'dock-fish-tools'));
+ ['collectionBtn','encyclopediaBtn','quickMoveBtn','addBtn'].forEach(id=>move(id,'dock-fish-tools'));
  const decor=document.querySelector('.bottom .panel .tools');
  if(decor)document.getElementById('dock-decor-tools').append(...Array.from(decor.children));
  const panels=document.querySelectorAll('.bottom .panel');
