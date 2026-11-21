@@ -57,16 +57,29 @@ function applyAquascape(){const key=document.getElementById('presetSelect').valu
 function refreshPresetDescription(){let config=AQUASCAPES[document.getElementById('presetSelect').value];document.getElementById('presetDescription').textContent=config.description+' ('+config.items.length+' decorations)';}
 function makeTank(id,water){return {id,water,capacity:12,background:'natural',lighting:100,fish:[],decor:[{type:'plant',x:.1,scale:1},{type:'plant',x:.24,scale:.7},{type:'plant',x:.78,scale:1.15},{type:'plant',x:.92,scale:.8},{type:'rock',x:.43,scale:1},{type:'rock',x:.62,scale:.8}]};}
 function enforceTwelveFishLimit(){
- let extras=[];
- for(const t of Object.values(state.tanks)){
+ // Reconcile legacy automatic overflow tanks without creating new tanks.
+ // The migration is idempotent: removed fish and credited coins are saved together.
+ const overflowIds=Object.keys(state.tanks).filter(id=>id!=='fresh'&&id!=='salt'&&/\\bOverflow\\s+\\d+$/i.test(state.tanks[id].name||''));
+ const overflowSet=new Set(overflowIds);
+ const extras=[];
+ for(const [id,t] of Object.entries(state.tanks)){
   t.capacity=12;
-  if(t.fish.length>12)extras.push(...t.fish.splice(12).map(f=>({fish:f,water:t.water})));
+  if(overflowSet.has(id)){
+   extras.push(...t.fish.map(f=>({fish:f,water:t.water})));
+  }else if(t.fish.length>12){
+   extras.push(...t.fish.splice(12).map(f=>({fish:f,water:t.water})));
+  }
  }
+ for(const id of overflowIds)delete state.tanks[id];
+ let sold=0,earned=0,moved=0;
  for(const {fish,water} of extras){
-  let destination=Object.values(state.tanks).find(t=>t.water===water&&t.fish.length<12);
-  if(!destination){let id=uid();destination=makeTank(id,water);destination.name=(water==='fresh'?'Freshwater':'Saltwater')+' Overflow '+(Object.keys(state.tanks).length+1);state.tanks[id]=destination;}
-  destination.fish.push(fish);
+  const destination=Object.values(state.tanks).find(t=>t.water===water&&t.fish.length<12);
+  if(destination){destination.fish.push(fish);moved++;}
+  else{const coins=saleValue(fish);state.coins+=coins;earned+=coins;sold++;}
  }
+ if(!state.tanks[state.active]){state.active=state.tanks.fresh?'fresh':Object.keys(state.tanks)[0];selected=null;}
+ if(sold||overflowIds.length){console.info('Overflow tanks removed:',overflowIds.length,'fish moved:',moved,'fish sold:',sold,'coins earned:',earned);}
+ return {removed:overflowIds.length,moved,sold,earned};
 }
 function initialState(){let fresh=makeTank('fresh','fresh'),salt=makeTank('salt','salt');['guppy','guppy'].forEach(s=>fresh.fish.push(makeFish(s)));return {version:1,active:'fresh',tanks:{fresh,salt},coins:1000,settings:{speed:1,quality:'high',bubbles:true,colorMutation:.1,patternMutation:.1,breedFrequency:1},stats:{bred:0,mutations:0,uniqueColors:[],patterns:[],maxGeneration:0},lineage:{},lastSaved:Date.now()};}
 const Store={key:'ai-aquarium-stage1',async load(){try{let raw=localStorage.getItem(this.key);if(raw)return JSON.parse(raw);}catch(e){console.warn('Load failed',e)}return null;},async save(state){try{let copy=JSON.parse(JSON.stringify(state));copy.lastSaved=Date.now();localStorage.setItem(this.key,JSON.stringify(copy));}catch(e){console.warn('Save failed',e)}}};
