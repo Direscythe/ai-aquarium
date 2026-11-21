@@ -59,7 +59,7 @@ function makeTank(id,water){return {id,water,capacity:12,background:'natural',li
 function enforceTwelveFishLimit(){
  // Reconcile legacy automatic overflow tanks without creating new tanks.
  // The migration is idempotent: removed fish and credited coins are saved together.
- const overflowIds=Object.keys(state.tanks).filter(id=>id!=='fresh'&&id!=='salt'&&/\\bOverflow\\s+\\d+$/i.test(state.tanks[id].name||''));
+ const overflowIds=Object.keys(state.tanks).filter(id=>id!=='fresh'&&id!=='salt'&&/\bOverflow\s+\d+$/i.test(state.tanks[id].name||''));
  const overflowSet=new Set(overflowIds);
  const extras=[];
  for(const [id,t] of Object.entries(state.tanks)){
